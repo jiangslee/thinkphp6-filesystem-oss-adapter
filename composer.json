@@ -10,11 +10,15 @@
     ],
     "require": {
 		"league/flysystem": "^1.0",
-        "aliyuncs/oss-sdk-php": "^2.4"
-	},
+        "aliyuncs/oss-sdk-php": "^2.4",
+        "ext-json": "*"
+    },
     "autoload": {
         "psr-4": {
             "Enoliu\\Flysystem\\Oss\\": "src"
-        }
+        },
+        "files": [
+            "src/Supports/functions.php"
+        ]
     }
 }

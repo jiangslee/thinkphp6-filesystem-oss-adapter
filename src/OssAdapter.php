@@ -3,6 +3,7 @@
 namespace Enoliu\Flysystem\Oss;
 
 
+use Enoliu\Flysystem\Oss\Traits\UploadTrait;
 use League\Flysystem\Adapter\AbstractAdapter;
 use League\Flysystem\Config;
 use OSS\Core\OssException;
@@ -11,6 +12,8 @@ use Throwable;
 
 class OssAdapter extends AbstractAdapter
 {
+    use UploadTrait;
+
     /**
      * @var string
      */

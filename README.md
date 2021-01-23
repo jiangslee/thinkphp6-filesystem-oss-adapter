@@ -74,7 +74,20 @@ use Enoliu\Flysystem\Oss\Plugins\FileUrl;
 $flysystem->addPlugin(new FileUrl());
 
 string $flysystem->getUrl('file.md');
+
 ```
+## 高级用法
+```php
+// 获取前端直传签名配置
+$config = [
+    'dir'      => 'upload/tmp',
+    'expire'   => 60 * 60,
+    'callback' => 'http://www.baidu.com',
+    'maxSize'  => 10 * 1024 * 1024
+];
+array $flysystem->getAdapter()->directUpload($config);
+```
+
 
 ## Contributing
 
