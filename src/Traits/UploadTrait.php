@@ -94,8 +94,6 @@ trait UploadTrait
     /**
      * oss 直传配置.
      *
-     * @param null $callBackUrl
-     *
      * @return false|string
      *
      * @throws \Exception
