@@ -92,6 +92,117 @@ trait UploadTrait
 
 
     /**
+     * oss 直传配置.
+     *
+     * @param null $callBackUrl
+     *
+     * @return false|string
+     *
+     * @throws \Exception
+     */
+    public function signatureConfig(string $prefix = '', $callBackUrl = null, array $customData = [], int $expire = 30, int $contentLengthRangeValue = 1048576000, array $systemData = [])
+    {
+        $systemFields = [
+            'bucket' => '${bucket}',
+            'etag' => '${etag}',
+            'filename' => '${object}',
+            'size' => '${size}',
+            'mimeType' => '${mimeType}',
+            'height' => '${imageInfo.height}',
+            'width' => '${imageInfo.width}',
+            'format' => '${imageInfo.format}',
+        ];
+
+        // 系统参数
+        $system = [];
+        if (empty($systemData)) {
+            $system = $systemFields;
+        } else {
+            foreach ($systemData as $key => $value) {
+                if (!in_array($value, $systemFields)) {
+                    throw new \InvalidArgumentException("Invalid oss system filed: ${value}");
+                }
+                $system[$key] = $value;
+            }
+        }
+
+        // 自定义参数
+        $callbackVar = [];
+        $data = [];
+        if (!empty($customData)) {
+            foreach ($customData as $key => $value) {
+                $callbackVar['x:'.$key] = (string) $value;
+                $data[$key] = '${x:'.$key.'}';
+            }
+        }
+
+        $callbackParam = [
+            'callbackUrl' => $callBackUrl,
+            'callbackBody' => urldecode(http_build_query(array_merge($system, $data))),
+            'callbackBodyType' => 'application/x-www-form-urlencoded',
+        ];
+        $callbackString = json_encode($callbackParam);
+        $base64CallbackBody = base64_encode($callbackString);
+
+        $now = time();
+        $end = $now + $expire;
+        $expiration = gmt_iso8601($end);
+
+        // 最大文件大小.用户可以自己设置
+        $condition = [
+            0 => 'content-length-range',
+            1 => 0,
+            2 => $contentLengthRangeValue,
+        ];
+        $conditions[] = $condition;
+
+        $start = [
+            0 => 'starts-with',
+            1 => '$key',
+            2 => $prefix,
+        ];
+        $conditions[] = $start;
+
+        // 添加bucket及callback条件，对该参数做上传验证
+        $conditions[] = ['bucket' => $this->bucket];
+        /**
+         * 坑：回传参数前端需要单独append到formData https://help.aliyun.com/document_detail/31989.html
+            let formData = new FormData();
+            formData.append("OSSAccessKeyId", res.accessid);
+            formData.append("policy", res.policy);
+            formData.append("signature", res.signature);
+            formData.append("key", res.dir + key);
+            formData.append("callback", res.callback);
+            //
+            Object.entries(res['callback-var']).forEach(item=>formData.append(item[0], item[1]));
+            formData.append("success_action_status", 200);
+            formData.append("file", file);
+         */
+        if(!empty($customData)) $conditions[] = ['callback' => $base64CallbackBody];
+
+        $arr = [
+            'expiration' => $expiration,
+            'conditions' => $conditions,
+        ];
+        $policy = json_encode($arr);
+        $base64Policy = base64_encode($policy);
+        $stringToSign = $base64Policy;
+        $signature = base64_encode(hash_hmac('sha1', $stringToSign, $this->accessKeySecret, true));
+
+        $response = [];
+        $response['accessid'] = $this->accessKeyId;
+        $response['host'] = $this->bucket . '.' . $this->endPoint;
+        $response['policy'] = $base64Policy;
+        $response['signature'] = $signature;
+        $response['expire'] = $end;
+        $response['callback'] = $base64CallbackBody;
+        $response['callback-var'] = $callbackVar;
+        $response['dir'] = $prefix;  // 这个参数是设置用户上传文件时指定的前缀。
+
+        return json_encode($response);
+    }
+
+    /**
      * 验签.
      */
     public function verify(): array
