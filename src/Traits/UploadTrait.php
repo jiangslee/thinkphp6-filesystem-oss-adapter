@@ -100,7 +100,7 @@ trait UploadTrait
      *
      * @throws \Exception
      */
-    public function signatureConfig(string $prefix = '', $callBackUrl = null, array $customData = [], int $expire = 30, int $contentLengthRangeValue = 1048576000, array $systemData = [])
+    public function signatureConfig(string $prefix = '', $callBackUrl = null, array $customData = [], int $expire = 30, int $contentLengthRangeValue = 1048576000, array $systemData = []): array
     {
         $systemFields = [
             'bucket' => '${bucket}',
@@ -199,7 +199,7 @@ trait UploadTrait
         $response['callback-var'] = $callbackVar;
         $response['dir'] = $prefix;  // 这个参数是设置用户上传文件时指定的前缀。
 
-        return json_encode($response);
+        return $response;
     }
 
     /**
