@@ -10,9 +10,6 @@ if ( ! function_exists('gmt_iso8601')) {
      */
     function gmt_iso8601(int $time): string
     {
-        $expiration = (new DateTime(date("c", $time)))->format(DateTime::ISO8601);
-        $pos = strpos($expiration, '+');
-        $expiration = substr($expiration, 0, $pos);
-        return $expiration . "Z";
+        return (new \DateTime('', new \DateTimeZone('UTC')))->setTimestamp($time)->format('Y-m-d\TH:i:s\Z');
     }
 }
